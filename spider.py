@@ -24,42 +24,54 @@ def get_html(url):
     return response.read()
 
 
-def get_nested_links(soup):
-    """
-    Возвращает массив вложенных ссылок
-    """
-    links = [item['href'] for item in soup]
-    return links
-
-
 class Spider:
 
     def __init__(self,
                  base_url,
+                 nested_link_class,
                  max_pages_count=100,
-                 min_words_count=1000,
+                 min_words_count=500,
                  output_directory="output/",
                  output_filename="index.txt"):
         """
         Конструктор
         :param base_url: Базовый URL, с которого начинается работа краулера
+        :param nested_link_class: Класс, по которому краулер будет искать вложенные ссылки
         :param max_pages_count: Максимальное количество обработанных страниц
         :param min_words_count: Минимальное кол-во слов на странице
         :param output_directory: Директория для сохранения документов
         :param output_filename: Имя файла, в который записывается индекс страницы и ее URL
         """
         self.__base_url = base_url
+        self.__nested_link_class = nested_link_class
         self.__max_pages_count = max_pages_count
         self.__min_words_count = min_words_count
-        self.__current_page_index = 0
         self.__output_directory = output_directory
         self.__output_filename = output_filename
+        self.__current_page_index = 0
+        self.__queue = []
+        self.__parsed_urls = set()
 
     def start_parsing(self):
         """ Производит парсинг с начальный страницы """
         self.__prepare_output_directory()
-        base_html = get_html(self.__base_url)
-        self.__parse(self.__base_url, base_html)
+        self.__queue.append(self.__base_url)
+
+        while self.__queue and self.__current_page_index < self.__max_pages_count:
+            url = self.__queue.pop()
+            html = get_html(url)
+            soup = BeautifulSoup(html, 'html.parser')
+
+            print('Start handling %d %s ...' % (self.__current_page_index, url))
+
+            if self.__check_text_size(soup):
+                self.__save_html(self.__current_page_index, url, html)
+                self.__parsed_urls.add(url)
+                self.__current_page_index += 1
+                nested_links = list(filter(self.__is_handled, self.__get_nested_links(soup)))
+                self.__queue.extend(nested_links)
+
+        print("Done!")
 
     def __prepare_output_directory(self):
         """ Очищает папку output от файлов предыдущего запуска """
@@ -71,26 +83,18 @@ class Spider:
         else:
             print("Successfully created the directory '%s' " % self.__output_directory)
 
-    def __parse(self, url, html):
-        soup = BeautifulSoup(html, 'html.parser')
+    def __is_handled(self, url):
+        return not (url in self.__parsed_urls)
 
-        if self.check_text_size(soup):
-            self.__save_html(self.__current_page_index, url, html)
-            self.__current_page_index = + 1
+    def __get_nested_links(self, soup):
+        """
+        Возвращает массив вложенных ссылок
+        """
+        internal_references = soup.find_all("a", class_=self.__nested_link_class)
+        links = list(set([self.__base_url + item['href'] for item in internal_references]))
+        return links
 
-        if self.__current_page_index >= self.__max_pages_count:
-            return
-
-        nested_links = get_nested_links(soup)
-
-        for nested_link in nested_links:
-            nested_html = get_html(nested_link)
-            self.__parse(nested_link, nested_html)
-
-            if self.__current_page_index >= self.__max_pages_count:
-                return
-
-    def check_text_size(self, soup):
+    def __check_text_size(self, soup):
         """
         Проверяет количество слов на странице
         :return: True, если слов не меньше self.__min_words_count
@@ -115,5 +119,5 @@ class Spider:
         output_filename_path = self.__output_directory + self.__output_filename
 
         with open(output_filename_path, 'a') as file:
-            line = str(index) + " – " + url
+            line = str(index) + " – " + url + "\n"
             file.write(line)
