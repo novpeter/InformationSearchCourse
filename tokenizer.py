@@ -36,8 +36,9 @@ class Tokenizer:
         tokens = [re.sub(r"\W", "", token, flags=re.I) for token in tokens]
 
         stop_words = stopwords.words('russian')
+        only_cyrillic_letters = re.compile('[а-яА-Я]')
 
-        tokens = [token for token in tokens if (token not in stop_words)]
+        tokens = [token for token in tokens if (token not in stop_words) and only_cyrillic_letters.match(token)]
 
         return tokens
 

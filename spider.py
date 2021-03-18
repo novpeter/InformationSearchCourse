@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 from bs4.element import Comment
 
 import os
+import tools
 import shutil
 import urllib.request
 import re
@@ -52,11 +53,14 @@ class Spider:
         self.__current_page_index = 0
         self.__queue = []
         self.__parsed_urls = set()
-        self.html_documents_path = "%s/html_documents/" % self.__output_directory
+        self.html_documents_path = "%s/text_documents/" % self.__output_directory
 
     def start_parsing(self):
         """ Производит парсинг с начальной страницы """
-        self.__prepare_output_directory()
+        tools.prepare_output_directory(self.__output_directory)
+
+        os.mkdir(self.html_documents_path)
+
         self.__queue.append(self.__base_url)
 
         while self.__queue and self.__current_page_index < self.__max_pages_count:
@@ -77,21 +81,6 @@ class Spider:
             self.__queue.extend(nested_links)
 
         print("Done!")
-
-    def __prepare_output_directory(self):
-        """ Очищает папку output от файлов предыдущего запуска """
-        try:
-            shutil.rmtree(self.__output_directory)
-        except OSError:
-            print("Deletion of the directory %s failed" % self.__output_directory)
-
-        try:
-            os.mkdir(self.__output_directory)
-            os.mkdir(self.html_documents_path)
-        except OSError:
-            print("Creation of the directory %s failed" % self.__output_directory)
-        else:
-            print("Successfully created the directory '%s' " % self.__output_directory)
 
     def __is_handled(self, url):
         return not (url in self.__parsed_urls)
@@ -123,9 +112,7 @@ class Spider:
         """
 
         html_filename_path = "%s/%d.txt" % (self.html_documents_path, index)
-        text_file = open(html_filename_path, "w")
-        text_file.write(text)
-        text_file.close()
+        tools.save_text_in_file(html_filename_path, text)
 
         output_filename_path = self.__output_directory + self.__output_filename
 
