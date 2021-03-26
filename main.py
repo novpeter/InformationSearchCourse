@@ -2,6 +2,8 @@ import os
 import tools
 from tokenizer import Tokenizer
 from spider import Spider
+from inverted_index import InvertedIndexFactory
+from boolean_search import BooleanSearch
 
 
 def run_spider():
@@ -14,7 +16,7 @@ def run_spider():
 
 def run_tokenizer():
     input_directory_path = "output/text_documents"
-    output_directory_path = "output/lematized_texts"
+    output_directory_path = "output/lemmatized_texts"
 
     all_files = os.listdir(input_directory_path)
     tools.prepare_output_directory(output_directory_path)
@@ -33,6 +35,25 @@ def run_tokenizer():
     print('Done')
 
 
+def run_inverted_index():
+    factory = InvertedIndexFactory('output/lemmatized_texts', 'output/inverted_index.json')
+    factory.make_inverted_index()
+    print('Inverted index was created!')
+
+
+def run_boolean_search():
+    lemmatized_texts_path = "output/lemmatized_texts"
+    all_files_indexes = [ filename[:-4] for filename in os.listdir(lemmatized_texts_path)]
+
+    bs = BooleanSearch('output/inverted_index.json', all_files_indexes)
+
+    queries = {"байден & навальный | !путин",
+               "рецепт & вкусного & блина",
+               "война & США | Россия"}
+
+    for query in queries:
+        bs.search(query)
+
+
 if __name__ == '__main__':
-    # run_spider()
-    run_tokenizer()
+    run_boolean_search()
