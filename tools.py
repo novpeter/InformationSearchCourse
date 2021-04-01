@@ -2,6 +2,13 @@ import os
 import shutil
 
 
+BASE_URL = "https://ria.ru/"
+NESTED_LINK_REGEXP = "^https://ria.ru/"
+TEXT_DOCUMENTS_PATH = "output/text_documents"
+LEMMATIZED_TEXTS_PATH = "output/lemmatized_texts"
+INVERTED_INDEX_PATH = "output/inverted_index.json"
+TF_IDF_PATH = "output/td-idf-calculation.json"
+
 def prepare_output_directory(path):
     """ Очищает папку output от файлов предыдущего запуска """
     try:

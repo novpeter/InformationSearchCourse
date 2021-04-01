@@ -1,22 +1,21 @@
+import json
 import os
 import tools
 from tokenizer import Tokenizer
 from spider import Spider
 from inverted_index import InvertedIndexFactory
 from boolean_search import BooleanSearch
+from tf_idf_calculator import TF_IDF_Calculator
 
 
 def run_spider():
-    base_url = "https://ria.ru/"
-    nested_link_regexp = "^https://ria.ru/"
-
-    spider = Spider(base_url, nested_link_regexp)
+    spider = Spider(tools.BASE_URL, tools.NESTED_LINK_REGEXP)
     spider.start_parsing()
 
 
 def run_tokenizer():
-    input_directory_path = "output/text_documents"
-    output_directory_path = "output/lemmatized_texts"
+    input_directory_path = tools.TEXT_DOCUMENTS_PATH
+    output_directory_path = tools.LEMMATIZED_TEXTS_PATH
 
     all_files = os.listdir(input_directory_path)
     tools.prepare_output_directory(output_directory_path)
@@ -36,24 +35,62 @@ def run_tokenizer():
 
 
 def run_inverted_index():
-    factory = InvertedIndexFactory('output/lemmatized_texts', 'output/inverted_index.json')
+    factory = InvertedIndexFactory(tools.LEMMATIZED_TEXTS_PATH, tools.INVERTED_INDEX_PATH)
     factory.make_inverted_index()
     print('Inverted index was created!')
 
 
 def run_boolean_search():
-    lemmatized_texts_path = "output/lemmatized_texts"
-    all_files_indexes = [ filename[:-4] for filename in os.listdir(lemmatized_texts_path)]
+    all_files_indexes = [filename[:-4] for filename in os.listdir(tools.LEMMATIZED_TEXTS_PATH)]
 
-    bs = BooleanSearch('output/inverted_index.json', all_files_indexes)
+    bs = BooleanSearch(tools.INVERTED_INDEX_PATH, all_files_indexes)
 
-    queries = {"байден & навальный | !путин",
-               "рецепт & вкусного & блина",
-               "война & США | Россия"}
+    queries = {
+        "байден & навальный | !путин",
+        "байден & навальный | путин",
+        "рецепт & вкусного & блина",
+        "война & США | Россия",
+        "политика & европа & санкции"
+    }
 
     for query in queries:
         bs.search(query)
 
 
+def run_tf_idf_calculator():
+    all_filenames = os.listdir(tools.LEMMATIZED_TEXTS_PATH)
+
+    with open(tools.INVERTED_INDEX_PATH) as json_file:
+        inverted_index = json.load(json_file)
+
+    result = {}
+
+    for term in inverted_index.keys():
+        docs_with_term = inverted_index[term]
+        for doc_index in docs_with_term:
+            lem_file_path = tools.LEMMATIZED_TEXTS_PATH + "/" + doc_index + ".txt"
+
+            with open(lem_file_path, 'r') as file:
+                tokens = file.read().split(' ')
+
+            TF, IDF, TF_IDF = TF_IDF_Calculator.calculate(term,
+                                                          tokens,
+                                                          len(all_filenames),
+                                                          len(docs_with_term))
+
+            try:
+                result[term][doc_index] = {"TF": TF, "IDF": IDF, "TF-IDF": TF_IDF}
+            except KeyError:
+                result[term] = {doc_index: {"TF": TF, "IDF": IDF, "TF-IDF": TF_IDF}}
+
+    dump = json.dumps(result,
+                      sort_keys=False,
+                      indent=4,
+                      ensure_ascii=False,
+                      separators=(',', ': '))
+
+    tools.save_text_in_file(tools.TF_IDF_PATH, dump)
+
+
 if __name__ == '__main__':
-    run_boolean_search()
+    run_tf_idf_calculator()
