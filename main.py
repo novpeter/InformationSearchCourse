@@ -6,6 +6,7 @@ from spider import Spider
 from inverted_index import InvertedIndexFactory
 from boolean_search import BooleanSearch
 from tf_idf_calculator import TF_IDF_Calculator
+from vector_model_search import VectorModelSearch
 
 
 def run_spider():
@@ -92,5 +93,10 @@ def run_tf_idf_calculator():
     tools.save_text_in_file(tools.TF_IDF_PATH, dump)
 
 
+def search():
+    vms = VectorModelSearch()
+    vms.search("Россия не имела никакого отношения к каким-либо кампаниям против кандидатов на выборах")
+
+
 if __name__ == '__main__':
-    run_tf_idf_calculator()
+    search()

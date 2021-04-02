@@ -4,6 +4,7 @@ import shutil
 
 BASE_URL = "https://ria.ru/"
 NESTED_LINK_REGEXP = "^https://ria.ru/"
+INDEX_PATH = "output/index.json"
 TEXT_DOCUMENTS_PATH = "output/text_documents"
 LEMMATIZED_TEXTS_PATH = "output/lemmatized_texts"
 INVERTED_INDEX_PATH = "output/inverted_index.json"

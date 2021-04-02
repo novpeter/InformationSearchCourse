@@ -93,7 +93,8 @@ class Spider:
         links = list(set([item['href'] for item in internal_references]))
         return links
 
-    def __get_visible_words_list(self, soup):
+    @staticmethod
+    def __get_visible_words_list(soup):
         """
         Проверяет количество слов на странице
         :return: True, если слов не меньше self.__min_words_count
