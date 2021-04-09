@@ -10,11 +10,13 @@ from vector_model_search import VectorModelSearch
 
 
 def run_spider():
+    print("-> Starting spider...")
     spider = Spider(tools.BASE_URL, tools.NESTED_LINK_REGEXP)
     spider.start_parsing()
 
 
 def run_tokenizer():
+    print("\n-> Starting tokenizer...")
     input_directory_path = tools.TEXT_DOCUMENTS_PATH
     output_directory_path = tools.LEMMATIZED_TEXTS_PATH
 
@@ -36,6 +38,7 @@ def run_tokenizer():
 
 
 def run_inverted_index():
+    print("\n-> Starting inverted index...")
     factory = InvertedIndexFactory(tools.LEMMATIZED_TEXTS_PATH, tools.INVERTED_INDEX_PATH)
     factory.make_inverted_index()
     print('Inverted index was created!')
@@ -59,6 +62,7 @@ def run_boolean_search():
 
 
 def run_tf_idf_calculator():
+    print("\n-> Starting TF-IDF calculator...")
     all_filenames = os.listdir(tools.LEMMATIZED_TEXTS_PATH)
 
     with open(tools.INVERTED_INDEX_PATH) as json_file:
@@ -94,5 +98,9 @@ def run_tf_idf_calculator():
 
 
 if __name__ == '__main__':
+    # run_spider()
+    # run_tokenizer()
+    # run_inverted_index()
+    # run_tf_idf_calculator()
     vms = VectorModelSearch()
-    vms.search("Россия не имела никакого отношения к кампаниям против кандидатов на выборах")
+    vms.search("Гамма излучение")

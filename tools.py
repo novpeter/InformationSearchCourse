@@ -2,8 +2,8 @@ import os
 import shutil
 
 
-BASE_URL = "https://ria.ru/"
-NESTED_LINK_REGEXP = "^https://ria.ru/"
+BASE_URL = "https://ru.wikipedia.org"
+NESTED_LINK_REGEXP = "^/wiki/"
 INDEX_PATH = "output/index.json"
 TEXT_DOCUMENTS_PATH = "output/text_documents"
 LEMMATIZED_TEXTS_PATH = "output/lemmatized_texts"

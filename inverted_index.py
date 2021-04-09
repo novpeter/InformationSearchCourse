@@ -21,7 +21,8 @@ class InvertedIndexFactory:
         """ Создает инвертированный список на основе файлов из заданной директории"""
         all_files = os.listdir(self.__input_directory_path)
 
-        for filename in all_files:
+        for (index, filename) in enumerate(all_files):
+            print("{}/{}".format(index, len(all_files)))
             input_file_path = self.__input_directory_path + '/' + filename
             with open(input_file_path, 'r') as file:
                 index = filename.split('.')[0]

@@ -40,7 +40,7 @@ class VectorModelSearch:
         for token in tokens:
             doc_with_terms_count = len(self.__tf_idf_calculations[token])
             _, _, tf_idf = TF_IDF_Calculator.calculate(token,
-                                                       corpus,
+                                                       tokens,
                                                        self.__all_docs_count,
                                                        doc_with_terms_count)
             query_vector.append(tf_idf)

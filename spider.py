@@ -1,3 +1,5 @@
+import json
+
 from bs4 import BeautifulSoup
 from bs4.element import Comment
 
@@ -22,8 +24,11 @@ def get_html(url):
     :param url: URL сайта
     :return: HTML документ
     """
-    response = urllib.request.urlopen(url)
-    return response.read()
+    try:
+        response = urllib.request.urlopen(url)
+        return response.read()
+    except:
+        return None
 
 
 class Spider:
@@ -32,9 +37,9 @@ class Spider:
                  base_url,
                  nested_link_regexp,
                  max_pages_count=100,
-                 min_words_count=500,
+                 min_words_count=1200,
                  output_directory="output/",
-                 output_filename="index.txt"):
+                 output_filename="index.json"):
         """
         Конструктор
         :param base_url: Базовый URL, с которого начинается работа краулера
@@ -53,6 +58,7 @@ class Spider:
         self.__current_page_index = 0
         self.__queue = []
         self.__parsed_urls = set()
+        self.__index = {}
         self.html_documents_path = "%s/text_documents/" % self.__output_directory
 
     def start_parsing(self):
@@ -66,20 +72,26 @@ class Spider:
         while self.__queue and self.__current_page_index < self.__max_pages_count:
             url = self.__queue.pop()
             html = get_html(url)
+
+            if html is None:
+                continue
+
             soup = BeautifulSoup(html, 'html.parser')
             words_list = self.__get_visible_words_list(soup)
 
             self.__parsed_urls.add(url)
-            print('Saved %d. Start handling  %s ...' % (self.__current_page_index, url))
+            print('Processing %s ...' % url)
 
             if len(words_list) >= self.__min_words_count:
                 text = u" ".join(t.strip() for t in words_list)
                 self.__save_text(self.__current_page_index, url, text)
                 self.__current_page_index += 1
+                print('Saved {} - {}'.format(self.__current_page_index, url))
 
             nested_links = list(filter(self.__is_handled, self.__get_nested_links(soup)))
             self.__queue.extend(nested_links)
 
+        self.__save_index()
         print("Done!")
 
     def __is_handled(self, url):
@@ -90,7 +102,7 @@ class Spider:
         Возвращает массив вложенных ссылок
         """
         internal_references = soup.findAll('a', attrs={'href': re.compile(self.__nested_link_regexp)})
-        links = list(set([item['href'] for item in internal_references]))
+        links = list(set([self.__base_url + item['href'] for item in internal_references]))
         return links
 
     @staticmethod
@@ -114,9 +126,13 @@ class Spider:
 
         html_filename_path = "%s/%d.txt" % (self.html_documents_path, index)
         tools.save_text_in_file(html_filename_path, text)
+        self.__index[index] = url
 
-        output_filename_path = self.__output_directory + self.__output_filename
+    def __save_index(self):
+        dump = json.dumps(self.__index,
+                          sort_keys=False,
+                          indent=4,
+                          ensure_ascii=False,
+                          separators=(',', ': '))
 
-        with open(output_filename_path, 'a') as file:
-            line = str(index) + " – " + url + "\n"
-            file.write(line)
+        tools.save_text_in_file(self.__output_directory + self.__output_filename, dump)
