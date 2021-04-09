@@ -93,10 +93,6 @@ def run_tf_idf_calculator():
     tools.save_text_in_file(tools.TF_IDF_PATH, dump)
 
 
-def search():
-    vms = VectorModelSearch()
-    vms.search("Россия не имела никакого отношения к каким-либо кампаниям против кандидатов на выборах")
-
-
 if __name__ == '__main__':
-    search()
+    vms = VectorModelSearch()
+    vms.search("Россия не имела никакого отношения к кампаниям против кандидатов на выборах")
